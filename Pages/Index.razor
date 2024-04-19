@@ -1,0 +1,48 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components
+@using Proyect_two.Data
+
+<h1>Bienvenido</h1>
+
+@if (!mostrarOpciones)
+{
+    <button @onclick="MostrarOpciones">Iniciar Sesión</button>
+}
+else
+{
+    <div>
+        <button @onclick="IrAIniciarSesionCliente">Cliente</button>
+        <button @onclick="IrATecnico">Técnico</button>
+        <button @onclick="IrAJefe">Jefe</button>
+    </div>
+}
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    private bool mostrarOpciones = false;
+
+    private void MostrarOpciones()
+    {
+        mostrarOpciones = true;
+    }
+
+    private void IrAIniciarSesionCliente()
+    {
+        // Redirigir al componente de inicio de sesión
+        NavigationManager.NavigateTo("/IniciarSesionCliente");
+    }
+
+    private void IrATecnico()
+    {
+        // Redirigir al componente de inicio de sesión del técnico
+        NavigationManager.NavigateTo("/IniciarSesionTecnico");
+    }
+
+    private void IrAJefe()
+    {
+        // Redirigir al componente de inicio de sesión del jefe
+        NavigationManager.NavigateTo("/IniciarSesionJefe");
+    }
+}

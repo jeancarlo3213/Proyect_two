@@ -1,0 +1,47 @@
+﻿@page "/IniciarSesionTecnico"
+@inject UsuarioService usuarioService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Iniciar Sesión como Técnico</h3>
+
+<div>
+    <label for="usuario">Usuario:</label>
+    <input type="text" id="usuario" @bind="usuario" />
+</div>
+
+<div>
+    <label for="contraseña">Contraseña:</label>
+    <input type="password" id="contraseña" @bind="contraseña" />
+</div>
+
+<button @onclick="IniciarSesion">Iniciar Sesión</button>
+
+@code {
+    private string usuario;
+    private string contraseña;
+
+    private async Task IniciarSesion()
+    {
+        if (!string.IsNullOrWhiteSpace(usuario) && !string.IsNullOrWhiteSpace(contraseña))
+        {
+            bool credencialesValidas = await usuarioService.ValidarCredencialesTecnico(usuario, contraseña);
+
+            if (credencialesValidas)
+            {
+                // Redirigir al menú del técnico
+                NavigationManager.NavigateTo("/MenuTecnico");
+            }
+            else
+            {
+                // Mostrar mensaje de error de credenciales inválidas
+                await JSRuntime.InvokeVoidAsync("alert", "Credenciales inválidas. Por favor, inténtelo de nuevo.");
+            }
+        }
+        else
+        {
+            // Mostrar mensaje de error si algún campo está vacío
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, complete todos los campos.");
+        }
+    }
+}
