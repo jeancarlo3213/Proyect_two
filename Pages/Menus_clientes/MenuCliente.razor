@@ -1,0 +1,70 @@
+﻿@page "/Menus_clientes/MenuCliente"
+@using Proyect_two.Pages.Menus_clientes
+
+@inject Proyect_two.UsuarioService usuarioService
+
+<h3>Bienvenido, @NombreCompleto</h3>
+
+@if (Usuario != null)
+{
+    <div class="perfil-container">
+        <div class="perfil-info">
+            <p><strong>Nombre:</strong> @Usuario.Nombre</p>
+            <p><strong>Apellido:</strong> @Usuario.Apellido</p>
+            <p><strong>Email:</strong> @Usuario.Email</p>
+            <!-- Otros detalles del perfil aquí -->
+        </div>
+        <div class="perfil-buttons">
+            <button class="btn-editar-perfil">Editar Perfil</button>
+            <button class="btn-cambiar-contraseña">Cambiar Contraseña</button>
+            <!-- Otros botones para acciones relacionadas con el perfil -->
+        </div>
+    </div>
+}
+
+<style>
+    .perfil-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .perfil-info {
+        width: 60%;
+    }
+
+    .perfil-buttons {
+        width: 35%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-editar-perfil, .btn-cambiar-contraseña {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+  .btn-editar-perfil:hover, .btn-cambiar-contraseña:hover {
+            background-color: #0056b3;
+   }
+</style>
+
+@code {
+    private Proyect_two.Pages.Menus_clientes.Usuario Usuario; // Corregido aquí el nombre de la variable
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Obtiene el usuario actual desde el servicio de usuario
+        Usuario = await usuarioService.ObtenerUsuarioPorId(1); // Reemplaza '1' con el ID del usuario actual
+    }
+
+    // Propiedad calculada para el nombre completo
+    private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";
+}
