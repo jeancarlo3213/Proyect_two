@@ -1,4 +1,4 @@
-﻿@page "/Menus_clientes/MenuCliente"
+﻿@page "/Menus_clientes/MenuCliente/{NombreUsuario}"
 @using Proyect_two.Pages.Menus_clientes
 
 @inject Proyect_two.UsuarioService usuarioService
@@ -21,6 +21,11 @@
         </div>
     </div>
 }
+else
+{
+    <p>No se pudo cargar la información del usuario.</p>
+}
+
 
 <style>
     .perfil-container {
@@ -51,20 +56,20 @@
         transition: background-color 0.3s;
     }
 
-  .btn-editar-perfil:hover, .btn-cambiar-contraseña:hover {
+        .btn-editar-perfil:hover, .btn-cambiar-contraseña:hover {
             background-color: #0056b3;
-   }
+        }
 </style>
 
 @code {
-    private Proyect_two.Pages.Menus_clientes.Usuario Usuario; // Corregido aquí el nombre de la variable
+    private Proyect_two.Pages.Menus_clientes.Usuario_classee Usuario;
+    [Parameter]
+    public string NombreUsuario { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        // Obtiene el usuario actual desde el servicio de usuario
-        Usuario = await usuarioService.ObtenerUsuarioPorId(1); // Reemplaza '1' con el ID del usuario actual
+        Usuario = await usuarioService.ObtenerUsuarioPorNombreUsuario(NombreUsuario);
     }
 
-    // Propiedad calculada para el nombre completo
     private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";
 }
