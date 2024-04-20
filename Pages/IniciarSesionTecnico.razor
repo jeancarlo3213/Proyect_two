@@ -29,8 +29,8 @@
 
             if (credencialesValidas)
             {
-                // Redirigir al menú del técnico
-                NavigationManager.NavigateTo("/MenuTecnico");
+                // Redirigir al menú del técnico pasando el nombre de usuario como parte de la URL
+                NavigationManager.NavigateTo($"/Menus_tecnicos/MenuTecnico/{usuario}");
             }
             else
             {
