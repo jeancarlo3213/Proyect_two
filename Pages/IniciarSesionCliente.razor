@@ -29,20 +29,18 @@
 
             if (credencialesValidas)
             {
-                // Redirigir al menú del cliente
-                NavigationManager.NavigateTo("/Menus_clientes/MenuCliente");
+                // Redirigir al menú del cliente pasando el nombre de usuario como parte de la URL
+                NavigationManager.NavigateTo($"/Menus_clientes/MenuCliente/{usuario}");
             }
             else
             {
                 // Mostrar mensaje de error de credenciales inválidas
-                // Por simplicidad, aquí solo mostramos un mensaje de alerta
                 await JSRuntime.InvokeVoidAsync("alert", "Credenciales inválidas. Por favor, inténtelo de nuevo.");
             }
         }
         else
         {
             // Mostrar mensaje de error si algún campo está vacío
-            // Por simplicidad, aquí solo mostramos un mensaje de alerta
             await JSRuntime.InvokeVoidAsync("alert", "Por favor, complete todos los campos.");
         }
     }

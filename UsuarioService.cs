@@ -1,18 +1,56 @@
-﻿using System.Data.SqlClient;
-
-using  Proyect_two.Pages.Menus_clientes;
+﻿using Microsoft.Extensions.Configuration;
+using Proyect_two.Pages.Menus_clientes;
+using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace Proyect_two
 {
     public class UsuarioService
     {
-        
         private readonly string _connectionString;
 
         public UsuarioService(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
+
+        public async Task<Usuario_classee> ObtenerUsuarioPorNombreUsuario(string nombreUsuario)
+        {
+            if (string.IsNullOrWhiteSpace(nombreUsuario))
+            {
+                // Si el nombre de usuario es nulo o está vacío, no se puede ejecutar la consulta
+                return null;
+            }
+
+            Usuario_classee usuario = null;
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                string query = "SELECT * FROM Usuarios WHERE Usuario = @Usuario";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Usuario", nombreUsuario);
+
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                if (reader.Read())
+                {
+                    usuario = new Usuario_classee
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                        Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                        Email = reader.GetString(reader.GetOrdinal("Email")),
+                        // Agrega otros campos del usuario según sea necesario
+                    };
+                }
+
+                reader.Close();
+            }
+
+            return usuario;
+        }
+
 
         public async Task<bool> ValidarCredencialesCliente(string usuario, string contraseña)
         {
@@ -50,36 +88,6 @@ namespace Proyect_two
             }
 
             return credencialesValidas;
-        }
-        public async Task<Usuario> ObtenerUsuarioPorId(int id)
-        {
-            Usuario usuario = null;
-
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                string query = "SELECT * FROM Usuarios WHERE Id = @Id";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Id", id);
-
-                await connection.OpenAsync();
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                if (reader.Read())
-                {
-                    usuario = new Usuario
-                    {
-                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                        Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                        Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
-                        Email = reader.GetString(reader.GetOrdinal("Email")),
-                        // Agrega otros campos del usuario según sea necesario
-                    };
-                }
-
-                reader.Close();
-            }
-
-            return usuario; // Añade esta línea para corregir el error
         }
 
         public async Task<bool> ValidarCredencialesJefe(string usuario, string contraseña)
