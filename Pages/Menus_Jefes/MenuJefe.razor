@@ -1,0 +1,81 @@
+﻿@page "/MenusJefes/MenuJefe/{NombreUsuario}"
+@using Proyect_two.Pages.Menus_Tecnicos
+@inject Proyect_two.UsuarioService usuarioService
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider authenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<h3>Bienvenido, @NombreCompleto</h3>
+
+@if (Usuario != null)
+{
+    <div class="perfil-container">
+        <div class="perfil-info">
+            <p><strong>Nombre:</strong> @Usuario.Nombre</p>
+            <p><strong>Apellido:</strong> @Usuario.Apellido</p>
+            <p><strong>Email:</strong> @Usuario.Email</p>
+            <!-- Otros detalles del perfil aquí -->
+        </div>
+        <div class="perfil-buttons">
+            <button class="btn-editar-perfil">Editar Perfil</button>
+            <button class="btn-cambiar-contraseña">Cambiar Contraseña</button>
+            <!-- Otros botones para acciones relacionadas con el perfil -->
+        </div>
+    </div>
+}
+else
+{
+    <p>No se pudo cargar la información del usuario.</p>
+}
+
+<style>
+    .perfil-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .perfil-info {
+        width: 60%;
+    }
+
+    .perfil-buttons {
+        width: 35%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-editar-perfil, .btn-cambiar-contraseña {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+        .btn-editar-perfil:hover, .btn-cambiar-contraseña:hover {
+            background-color: #0056b3;
+        }
+</style>
+
+@code {
+    private Proyect_two.Pages.Menus_clientes.Usuario_classee Usuario;
+    [Parameter]
+    public string NombreUsuario { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Usuario = await ObtenerUsuarioPorNombreUsuario(NombreUsuario);
+    }
+
+    private async Task<Proyect_two.Pages.Menus_clientes.Usuario_classee> ObtenerUsuarioPorNombreUsuario(string nombreUsuario)
+    {
+        // Aquí llamamos al servicio para obtener el usuario por su nombre de usuario
+        return await usuarioService.ObtenerUsuarioPorNombreUsuario(nombreUsuario);
+    }
+
+    private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";
+}
