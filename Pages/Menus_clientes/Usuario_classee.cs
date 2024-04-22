@@ -10,6 +10,6 @@
         public string Email { get; set; }
         public string Puesto { get; set; }
         public string DPI { get; set; }
+        public int? NumeroOficina { get; set; }
     }
 }
-

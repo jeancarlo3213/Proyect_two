@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Hosting;
 using Proyect_two;
 using Proyect_two.Data;
+using Proyect_two.Pages.Clases_Utiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddScoped<SolicitudService>();
 builder.Services.AddScoped<UsuarioService>(); // Registra el servicio UsuarioService
 
 var app = builder.Build();

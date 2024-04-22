@@ -1,33 +1,80 @@
 ﻿@page "/Menus_clientes/MenuCliente/{NombreUsuario}"
 @using Proyect_two.Pages.Menus_clientes
+@using Proyect_two.Pages.Clases_Utiles
 
 @inject Proyect_two.UsuarioService usuarioService
+@inject Proyect_two.Pages.Clases_Utiles.SolicitudService solicitudService
 
 <h3>Bienvenido, @NombreCompleto</h3>
 
-@if (Usuario != null)
-{
-    <div class="perfil-container">
-        <div class="perfil-info">
+<div class="perfil-container">
+    <div class="perfil-info">
+        @* Verificar si Usuario no es nulo antes de acceder a sus propiedades *@
+        @if (Usuario != null)
+        {
             <p><strong>Nombre:</strong> @Usuario.Nombre</p>
             <p><strong>Apellido:</strong> @Usuario.Apellido</p>
             <p><strong>Email:</strong> @Usuario.Email</p>
-            <!-- Otros detalles del perfil aquí -->
-        </div>
-        <div class="perfil-buttons">
-            <button class="btn-editar-perfil">Editar Perfil</button>
-            <button class="btn-cambiar-contraseña">Cambiar Contraseña</button>
-            <!-- Otros botones para acciones relacionadas con el perfil -->
-        </div>
+        }
+        <!-- Otros detalles del perfil aquí -->
     </div>
-}
-else
-{
-    <p>No se pudo cargar la información del usuario.</p>
-}
+    <div class="perfil-buttons">
+        <button class="btn-generar-solicitud" @onclick="GenerarSolicitud">Generar Solicitud</button>
+        <button class="btn-editar-perfil">Editar Perfil</button>
+        <button class="btn-cambiar-contraseña">Cambiar Contraseña</button>
+        <!-- Otros botones para acciones relacionadas con el perfil -->
+    </div>
+</div>
 
+<div class="solicitudes-container">
+    <h4>Mis Solicitudes</h4>
+    @if (Solicitudes != null && Solicitudes.PrimerNodo != null)
+    {
+        var nodoActual = Solicitudes.PrimerNodo;
+        while (nodoActual != null)
+        {
+            var solicitudActual = (Solicitud)nodoActual.Informacion;
+            <div>
+                <p><strong>Id:</strong> @solicitudActual.Id</p>
+                <p><strong>Estado:</strong> @solicitudActual.Estado</p>
+                <button class="btn-ver-detalles">Ver Detalles</button>
+            </div>
+            nodoActual = nodoActual.Referencia;
+        }
+    }
+    else
+    {
+        <p>No hay solicitudes disponibles.</p>
+    }
+</div>
+
+@code {
+    private Usuario_classee Usuario;
+    private ListaEnlazadaSimple Solicitudes;
+
+    [Parameter]
+    public string NombreUsuario { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Usuario = await usuarioService.ObtenerUsuarioPorNombreUsuario(NombreUsuario);
+        if (Usuario != null)
+        {
+            Solicitudes = await solicitudService.ObtenerSolicitudesPorCliente(Usuario.Id);
+        }
+    }
+
+    private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";
+
+    private async Task GenerarSolicitud()
+    {
+        // Aquí puedes implementar la lógica para generar una nueva solicitud
+        // Por ejemplo, mostrar un formulario para que el cliente complete los detalles de la solicitud
+    }
+}
 
 <style>
+    /* Estilos para los elementos del perfil */
     .perfil-container {
         display: flex;
         justify-content: space-between;
@@ -46,8 +93,19 @@ else
         gap: 10px;
     }
 
-    .btn-editar-perfil, .btn-cambiar-contraseña {
-        padding: 10px 20px;
+    /* Estilos para las solicitudes */
+    .solicitudes-container {
+        margin-top: 20px;
+    }
+
+        .solicitudes-container div {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+    .btn-ver-detalles {
+        padding: 5px 10px;
         background-color: #007bff;
         color: white;
         border: none;
@@ -56,20 +114,7 @@ else
         transition: background-color 0.3s;
     }
 
-        .btn-editar-perfil:hover, .btn-cambiar-contraseña:hover {
+        .btn-ver-detalles:hover {
             background-color: #0056b3;
         }
 </style>
-
-@code {
-    private Proyect_two.Pages.Menus_clientes.Usuario_classee Usuario;
-    [Parameter]
-    public string NombreUsuario { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        Usuario = await usuarioService.ObtenerUsuarioPorNombreUsuario(NombreUsuario);
-    }
-
-    private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";
-}
