@@ -1,96 +1,189 @@
-﻿namespace Proyect_two.Pages.Clases_Utiles
+﻿using System.Data.SqlClient;
+using System.Threading.Tasks;
+
+namespace Proyect_two.Pages.Clases_Utiles
 {
     public class SolicitudService
     {
-        private ListaEnlazadaSimple listaSolicitudes;
+        private readonly string connectionString;
 
-        public SolicitudService()
+        public SolicitudService(string connectionString)
         {
-            listaSolicitudes = new ListaEnlazadaSimple();
+            this.connectionString = connectionString;
         }
 
-        public void AgregarSolicitud(Solicitud nuevaSolicitud)
+        // Método para agregar una nueva solicitud a la base de datos
+        public async Task AgregarSolicitud(Solicitud nuevaSolicitud)
         {
-            listaSolicitudes.AgregarAlFinal(nuevaSolicitud);
-        }
-
-        public Solicitud BuscarSolicitudPorId(int id)
-        {
-            Nodo nodoActual = listaSolicitudes.PrimerNodo;
-            while (nodoActual != null)
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                if (((Solicitud)nodoActual.Informacion).Id == id)
+                string query = @"INSERT INTO Solicitudes (IdCliente, IdOpcion, DescripcionProblema, Estado, IdTecnico, Calificacion)
+                                 VALUES (@IdCliente, @IdOpcion, @DescripcionProblema, @Estado, @IdTecnico, @Calificacion)";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    return (Solicitud)nodoActual.Informacion;
+                    command.Parameters.AddWithValue("@IdCliente", nuevaSolicitud.IdCliente);
+                    command.Parameters.AddWithValue("@IdOpcion", nuevaSolicitud.IdOpcion);
+                    command.Parameters.AddWithValue("@DescripcionProblema", nuevaSolicitud.DescripcionProblema);
+                    command.Parameters.AddWithValue("@Estado", nuevaSolicitud.Estado);
+                    command.Parameters.AddWithValue("@IdTecnico", nuevaSolicitud.IdTecnico);
+                    command.Parameters.AddWithValue("@Calificacion", nuevaSolicitud.Calificacion);
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
                 }
-                nodoActual = nodoActual.Referencia;
             }
-            return null;
         }
+
+        // Método para actualizar el estado de una solicitud en la base de datos
+        public async Task ActualizarEstadoSolicitud(int id, string nuevoEstado)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string query = "UPDATE Solicitudes SET Estado = @NuevoEstado WHERE IdSolicitud = @Id";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@NuevoEstado", nuevoEstado);
+                    command.Parameters.AddWithValue("@Id", id);
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        // Método para eliminar una solicitud de la base de datos
+        public async Task EliminarSolicitud(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string query = "DELETE FROM Solicitudes WHERE IdSolicitud = @Id";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        // Método para buscar una solicitud por su ID
+        public async Task<Solicitud> BuscarSolicitudPorId(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string query = "SELECT * FROM Solicitudes WHERE IdSolicitud = @Id";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+
+                    await connection.OpenAsync();
+                    SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                    if (reader.Read())
+                    {
+                        return new Solicitud
+                        {
+                            IdSolicitud = reader.GetInt32(reader.GetOrdinal("IdSolicitud")),
+                            IdCliente = reader.GetInt32(reader.GetOrdinal("IdCliente")),
+                            IdOpcion = reader.GetInt32(reader.GetOrdinal("IdOpcion")),
+                            DescripcionProblema = reader.GetString(reader.GetOrdinal("DescripcionProblema")),
+                            Estado = reader.GetString(reader.GetOrdinal("Estado")),
+                            IdTecnico = reader.IsDBNull(reader.GetOrdinal("IdTecnico")) ? null : (int?)reader.GetInt32(reader.GetOrdinal("IdTecnico")),
+                            Calificacion = reader.GetString(reader.GetOrdinal("Calificacion"))
+                        };
+                    }
+
+                    return null;
+                }
+            }
+        }
+
+        // Método para obtener todas las solicitudes de un cliente
         public async Task<ListaEnlazadaSimple> ObtenerSolicitudesPorCliente(int idCliente)
         {
             ListaEnlazadaSimple solicitudesCliente = new ListaEnlazadaSimple();
-            Nodo nodoActual = listaSolicitudes.PrimerNodo;
 
-            while (nodoActual != null)
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                if (((Solicitud)nodoActual.Informacion).IdCliente == idCliente)
+                string query = "SELECT * FROM Solicitudes WHERE IdCliente = @IdCliente";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    solicitudesCliente.AgregarAlFinal(nodoActual.Informacion);
+                    command.Parameters.AddWithValue("@IdCliente", idCliente);
+
+                    await connection.OpenAsync();
+                    SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                    while (reader.Read())
+                    {
+                        Solicitud solicitud = new Solicitud
+                        {
+                            IdSolicitud = reader.GetInt32(reader.GetOrdinal("IdSolicitud")),
+                            IdCliente = reader.GetInt32(reader.GetOrdinal("IdCliente")),
+                            IdOpcion = reader.GetInt32(reader.GetOrdinal("IdOpcion")),
+                            DescripcionProblema = reader.GetString(reader.GetOrdinal("DescripcionProblema")),
+                            Estado = reader.GetString(reader.GetOrdinal("Estado")),
+                            IdTecnico = reader.IsDBNull(reader.GetOrdinal("IdTecnico")) ? null : (int?)reader.GetInt32(reader.GetOrdinal("IdTecnico")),
+                            Calificacion = reader.GetString(reader.GetOrdinal("Calificacion"))
+                        };
+
+                        solicitudesCliente.AgregarAlFinal(solicitud);
+                    }
                 }
-                nodoActual = nodoActual.Referencia;
             }
 
             return solicitudesCliente;
         }
-
-        public void ActualizarEstadoSolicitud(int id, string nuevoEstado)
+        public async Task AgregarNuevaOpcion(string descripcion)
         {
-            Nodo nodoActual = listaSolicitudes.PrimerNodo;
-            while (nodoActual != null)
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                if (((Solicitud)nodoActual.Informacion).Id == id)
+                string query = @"INSERT INTO Opciones (Descripcion) VALUES (@Descripcion)";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    ((Solicitud)nodoActual.Informacion).Estado = nuevoEstado;
-                    return;
+                    command.Parameters.AddWithValue("@Descripcion", descripcion);
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
                 }
-                nodoActual = nodoActual.Referencia;
             }
         }
 
-        public void EliminarSolicitud(int id)
+        // Método para obtener todas las opciones disponibles
+        public async Task<ListaEnlazadaSimple> ObtenerOpciones()
         {
-            Nodo nodoActual = listaSolicitudes.PrimerNodo;
-            Nodo nodoAnterior = null;
+            ListaEnlazadaSimple opciones = new ListaEnlazadaSimple();
 
-            while (nodoActual != null)
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                if (((Solicitud)nodoActual.Informacion).Id == id)
+                string query = "SELECT * FROM Opciones";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    if (nodoAnterior != null)
+                    await connection.OpenAsync();
+                    SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                    while (reader.Read())
                     {
-                        nodoAnterior.Referencia = nodoActual.Referencia;
-                        if (nodoActual.Referencia == null)
+                        Opcion opcion = new Opcion
                         {
-                            listaSolicitudes.UltimoNodo = nodoAnterior;
-                        }
+                            IdOpcion = reader.GetInt32(reader.GetOrdinal("IdOpcion")),
+                            Descripcion = reader.GetString(reader.GetOrdinal("Descripcion"))
+                        };
+
+                        opciones.AgregarAlFinal(opcion);
                     }
-                    else
-                    {
-                        listaSolicitudes.PrimerNodo = nodoActual.Referencia;
-                        if (listaSolicitudes.PrimerNodo == null)
-                        {
-                            listaSolicitudes.UltimoNodo = null;
-                        }
-                    }
-                    return;
                 }
-                nodoAnterior = nodoActual;
-                nodoActual = nodoActual.Referencia;
             }
+
+            return opciones;
         }
-
-       
-
     }
 }
+

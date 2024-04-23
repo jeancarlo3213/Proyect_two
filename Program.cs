@@ -10,8 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
-builder.Services.AddScoped<SolicitudService>();
 builder.Services.AddScoped<UsuarioService>(); // Registra el servicio UsuarioService
+
+// Obtén la cadena de conexión desde la configuración
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Registra el servicio SolicitudService con la cadena de conexión
+builder.Services.AddScoped<SolicitudService>(serviceProvider => new SolicitudService(connectionString));
 
 var app = builder.Build();
 
