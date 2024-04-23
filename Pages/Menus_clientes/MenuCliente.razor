@@ -5,52 +5,212 @@
 @inject Proyect_two.UsuarioService usuarioService
 @inject Proyect_two.Pages.Clases_Utiles.SolicitudService solicitudService
 
-<h3>Bienvenido, @NombreCompleto</h3>
+<h3 class="titulo">Bienvenido, @NombreCompleto</h3>
 
 <div class="perfil-container">
     <div class="perfil-info">
-        @* Verificar si Usuario no es nulo antes de acceder a sus propiedades *@
         @if (Usuario != null)
         {
             <p><strong>Nombre:</strong> @Usuario.Nombre</p>
-            <p><strong>Apellido:</strong> @Usuario.Apellido</p>
+            <p><strong>Usuario:</strong> @Usuario.Usuario</p>
             <p><strong>Email:</strong> @Usuario.Email</p>
         }
-        <!-- Otros detalles del perfil aquí -->
     </div>
     <div class="perfil-buttons">
         <button class="btn-generar-solicitud" @onclick="GenerarSolicitud">Generar Solicitud</button>
-        <button class="btn-editar-perfil">Editar Perfil</button>
-        <button class="btn-cambiar-contraseña">Cambiar Contraseña</button>
-        <!-- Otros botones para acciones relacionadas con el perfil -->
+        <button class="btn-ver-solicitudes" @onclick="() => MostrarSolicitudes = true">Mis Solicitudes</button>
     </div>
-</div>
-
-<div class="solicitudes-container">
-    <h4>Mis Solicitudes</h4>
-    @if (Solicitudes != null && Solicitudes.PrimerNodo != null)
-    {
-        var nodoActual = Solicitudes.PrimerNodo;
-        while (nodoActual != null)
+</div> <!-- Asegúrate de que este div cierra correctamente -->
+@if (MostrarSeleccion)
+{
+    <div class="opciones-container">
+        <h4>Opciones Disponibles</h4>
+        @foreach (var nodo in Opciones)
         {
-            var solicitudActual = (Solicitud)nodoActual.Informacion;
+            var opcion = (Opcion)nodo.Informacion;
             <div>
-                <p><strong>Id:</strong> @solicitudActual.Id</p>
-                <p><strong>Estado:</strong> @solicitudActual.Estado</p>
-                <button class="btn-ver-detalles">Ver Detalles</button>
+                <button class="btn-seleccionar-opcion" @onclick="() => SeleccionarOpcion(opcion)">
+                    ID: @opcion.IdOpcion - @opcion.Descripcion
+                </button>
             </div>
-            nodoActual = nodoActual.Referencia;
+        }
+        <button class="btn-agregar-opcion" @onclick="@(() => MostrarFormularioAgregar = true)">Agregar Opción</button>
+    </div> <!-- Verificación de cierre de div -->
+}
+
+@if (MostrarFormularioAgregar)
+{
+    <div class="formulario-agregar">
+        <h4>Agregar Nueva Opción</h4>
+        <input type="text" @bind="NuevaOpcionDescripcion" placeholder="Descripción de la nueva opción" />
+        <button class="btn-guardar-opcion" @onclick="AgregarNuevaOpcion">Guardar Opción</button>
+    </div> <!-- Verificación de cierre de div -->
+}
+
+@if (MostrarFormulario)
+{
+    <div class="formulario-solicitud">
+        <h4>Generar Solicitud</h4>
+        <p>ID Opción: @OpcionSeleccionada?.IdOpcion</p>
+        <p>Descripción del Problema: @OpcionSeleccionada?.Descripcion</p>
+        <button class="btn-confirmar-solicitud" @onclick="ConfirmarSolicitud">Confirmar Solicitud</button>
+    </div> <!-- Verificación de cierre de div -->
+}
+
+<div class="solicitudes-container" style="display: @(MostrarSolicitudes ? "block" : "none")">
+    <h4>Mis Solicitudes</h4>
+    @if (Solicitudes != null && Solicitudes.Any())
+    {
+        @foreach (var nodo in Solicitudes)
+        {
+            var solicitud = (Solicitud)nodo.Informacion;
+            <div class="solicitud-item">
+                <p><strong>ID Solicitud:</strong> @solicitud.IdSolicitud</p>
+                <p><strong>Descripción:</strong> @solicitud.DescripcionProblema</p>
+                <button class="btn-ver-detalles">Ver Detalles</button>
+            </div> <!-- Verificación de cierre de div -->
         }
     }
     else
     {
         <p>No hay solicitudes disponibles.</p>
     }
-</div>
+</div> <!-- Asegúrate de que este div cierra correctamente -->
+
+
+<style>
+    .perfil-container {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .perfil-info p {
+        margin: 5px 0;
+    }
+
+    .perfil-buttons button {
+        padding: 5px 10px;
+        margin-top: 10px;
+        border: none;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .opciones-container {
+        margin-bottom: 20px;
+    }
+
+    .opciones-container h4 {
+        margin-bottom: 10px;
+    }
+
+    .btn-seleccionar-opcion {
+        margin-bottom: 5px;
+        padding: 5px 10px;
+        border: none;
+        background-color: #28a745;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .btn-agregar-opcion {
+        margin-top: 10px;
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .formulario-agregar {
+        margin-bottom: 20px;
+    }
+
+    .formulario-agregar input {
+        margin-bottom: 10px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn-guardar-opcion {
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .formulario-solicitud {
+        margin-bottom: 20px;
+    }
+
+    .formulario-solicitud p {
+        margin-bottom: 10px;
+    }
+
+    .btn-confirmar-solicitud {
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .solicitudes-container {
+        display: none;
+        margin-bottom: 20px;
+    }
+
+    .solicitudes-container h4 {
+        margin-bottom: 10px;
+    }
+
+    .solicitud-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .solicitud-item p {
+        margin: 5px 0;
+    }
+
+    .btn-ver-detalles {
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .titulo {
+        margin-bottom: 20px;
+    }
+</style>
 
 @code {
     private Usuario_classee Usuario;
-    private ListaEnlazadaSimple Solicitudes;
+    private ListaEnlazadaSimple Solicitudes = new ListaEnlazadaSimple();
+    private ListaEnlazadaSimple Opciones = new ListaEnlazadaSimple();
+    private bool MostrarSeleccion = false;
+    private bool MostrarFormulario = false;
+    private bool MostrarFormularioAgregar = false;
+    private Opcion OpcionSeleccionada;
+    private string NuevaOpcionDescripcion;
+    private bool MostrarSolicitudes = false;
 
     [Parameter]
     public string NombreUsuario { get; set; }
@@ -64,57 +224,57 @@
         }
     }
 
-    private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";
+    private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Usuario}" : "Usuario";
 
     private async Task GenerarSolicitud()
     {
-        // Aquí puedes implementar la lógica para generar una nueva solicitud
-        // Por ejemplo, mostrar un formulario para que el cliente complete los detalles de la solicitud
+        if (Usuario != null)
+        {
+            Opciones = await solicitudService.ObtenerOpciones();
+            MostrarSeleccion = true;
+            MostrarFormulario = false;
+            MostrarFormularioAgregar = false;
+            MostrarSolicitudes = false;
+        }
+    }
+
+    private async Task SeleccionarOpcion(Opcion opcion)
+    {
+        OpcionSeleccionada = opcion;
+        MostrarSeleccion = false;
+        MostrarFormulario = true;
+        MostrarFormularioAgregar = false;
+        MostrarSolicitudes = false;
+    }
+
+    private async Task AgregarNuevaOpcion()
+    {
+        if (!string.IsNullOrEmpty(NuevaOpcionDescripcion))
+        {
+            await solicitudService.AgregarNuevaOpcion(NuevaOpcionDescripcion);
+            Opciones = await solicitudService.ObtenerOpciones();
+            NuevaOpcionDescripcion = string.Empty;
+        }
+    }
+
+    private async Task ConfirmarSolicitud()
+    {
+        if (OpcionSeleccionada != null)
+        {
+            Solicitud nuevaSolicitud = new Solicitud
+                {
+                    IdCliente = Usuario.Id,
+                    IdOpcion = OpcionSeleccionada.IdOpcion,
+                    DescripcionProblema = OpcionSeleccionada.Descripcion,
+                    Estado = "En espera",
+                    IdTecnico = 0,
+                    Calificacion = "Ninguna"
+                };
+            await solicitudService.AgregarSolicitud(nuevaSolicitud);
+            MostrarFormulario = false;
+            MostrarSolicitudes = true;
+            Solicitudes = await solicitudService.ObtenerSolicitudesPorCliente(Usuario.Id);
+        }
     }
 }
 
-<style>
-    /* Estilos para los elementos del perfil */
-    .perfil-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 20px;
-    }
-
-    .perfil-info {
-        width: 60%;
-    }
-
-    .perfil-buttons {
-        width: 35%;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    /* Estilos para las solicitudes */
-    .solicitudes-container {
-        margin-top: 20px;
-    }
-
-        .solicitudes-container div {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-    .btn-ver-detalles {
-        padding: 5px 10px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-        .btn-ver-detalles:hover {
-            background-color: #0056b3;
-        }
-</style>
