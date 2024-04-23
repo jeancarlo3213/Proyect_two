@@ -1,0 +1,60 @@
+﻿@using Proyect_two.Pages.Clases_Utiles
+@using Proyect_two.Pages.Menus_clientes
+
+<Modal IsOpen="@IsOpen" OnClose="HandleClose">
+    <ModalHeader>
+        <h5 class="modal-title">Seleccionar Técnico</h5>
+    </ModalHeader>
+    <ModalBody>
+        <div class="technician-list">
+            @if (Tecnicos != null && !Tecnicos.ListaVacia())
+            {
+                foreach (Nodo nodo in Tecnicos)
+                {
+                    Usuario_classee tecnico = nodo.Informacion as Usuario_classee;
+                    <button class="btn btn-technician" @onclick="() => SelectTecnico(tecnico.Id)">
+                        @tecnico.Nombre @tecnico.Apellido
+                    </button>
+                }
+            }
+        </div>
+    </ModalBody>
+</Modal>
+
+@code {
+    [Parameter] public ListaEnlazadaSimple Tecnicos { get; set; }
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<int> OnTecnicoSelected { get; set; }
+
+    private void SelectTecnico(int tecnicoId)
+    {
+        OnTecnicoSelected.InvokeAsync(tecnicoId);
+    }
+
+    private void HandleClose()
+    {
+        IsOpen = false;
+    }
+}
+
+<style>
+    .technician-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px; /* Espaciado entre botones */
+    }
+
+    .btn-technician {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+    }
+
+    .btn-technician:hover {
+        background-color: #0056b3;
+    }
+</style>

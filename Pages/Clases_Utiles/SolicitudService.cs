@@ -215,6 +215,26 @@ namespace Proyect_two.Pages.Clases_Utiles
             }
             return tecnicos;
         }
+        public async Task AsignarTecnicoASolicitud(int idSolicitud, int idTecnico)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                // Supongamos que el estado "Asignado" indica que un técnico ha sido asignado
+                string query = @"
+                    UPDATE Solicitudes 
+                    SET 
+                        IdTecnico = @IdTecnico, 
+                        Estado = 'Asignado'
+                    WHERE IdSolicitud = @IdSolicitud";
+
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@IdSolicitud", idSolicitud);
+                command.Parameters.AddWithValue("@IdTecnico", idTecnico);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+        }
         public async Task<ListaEnlazadaSimple> ObtenerOpciones()
         {
             ListaEnlazadaSimple opciones = new ListaEnlazadaSimple();

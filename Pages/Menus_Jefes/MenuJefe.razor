@@ -16,14 +16,12 @@
             <p><strong>Email:</strong> @Usuario.Email</p>
         </div>
         <div class="perfil-buttons">
-            <button class="btn-editar-perfil">Editar Perfil</button>
-            <button class="btn-cambiar-contraseña">Cambiar Contraseña</button>
-            <button class="btn-ver-solicitudes" @onclick="CargarSolicitudesEnEspera">Ver Solicitudes en Espera</button>
+            <button class="btn btn-info" @onclick="CargarSolicitudesEnEspera">Ver Solicitudes en Espera</button>
         </div>
         @if (SolicitudesEnEspera != null && !SolicitudesEnEspera.ListaVacia())
         {
-            <table>
-                <thead>
+            <table class="table">
+                <thead class="thead-dark">
                     <tr>
                         <th>ID Solicitud</th>
                         <th>Descripción</th>
@@ -39,11 +37,17 @@
                             <td>@solicitud.IdSolicitud</td>
                             <td>@solicitud.DescripcionProblema</td>
                             <td>@solicitud.Estado</td>
-                            <td><button @onclick="() => AsignarTecnico(solicitud)">Asignar Técnico</button></td>
+                            <td>
+                                <button class="btn btn-success" @onclick="() => MostrarModalAsignarTecnico(solicitud)">Asignar Técnico</button>
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
+        }
+        @if (mostrarModal)
+        {
+            <TecnicoModal Tecnicos="@Tecnicos" IsOpen="@mostrarModal" OnTecnicoSelected="HandleTecnicoSelected" />
         }
     </div>
 }
@@ -54,14 +58,17 @@ else
 
 @code {
     private Usuario_classee Usuario;
-    private ListaEnlazadaSimple SolicitudesEnEspera;
+    private ListaEnlazadaSimple SolicitudesEnEspera, Tecnicos;
+    private bool mostrarModal = false;
+    private Solicitud solicitudSeleccionada;
     [Parameter]
     public string NombreUsuario { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         Usuario = await usuarioService.ObtenerUsuarioPorNombreUsuario(NombreUsuario);
-        SolicitudesEnEspera = new ListaEnlazadaSimple(); // Asegura que esté inicializada
+        SolicitudesEnEspera = new ListaEnlazadaSimple();
+        Tecnicos = await usuarioService.ObtenerTecnicos();
     }
 
     private async Task CargarSolicitudesEnEspera()
@@ -69,9 +76,18 @@ else
         SolicitudesEnEspera = await solicitudService.ObtenerSolicitudesPorEstado("En espera");
     }
 
-    private async Task AsignarTecnico(Solicitud solicitud)
+    private void MostrarModalAsignarTecnico(Solicitud solicitud)
     {
-        // Implementa la lógica para abrir un modal o redirigir a otra página donde se pueda seleccionar un técnico
+        solicitudSeleccionada = solicitud;
+        mostrarModal = true;
+    }
+
+    private async Task HandleTecnicoSelected(int tecnicoId)
+    {
+        await solicitudService.AsignarTecnicoASolicitud(solicitudSeleccionada.IdSolicitud, tecnicoId);
+        mostrarModal = false;
+        await CargarSolicitudesEnEspera(); // Recargar las solicitudes
+        solicitudSeleccionada = null; // Resetear la solicitud seleccionada
     }
 
     private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Proyect_two.Pages.Clases_Utiles;
 using Proyect_two.Pages.Menus_clientes;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
@@ -51,7 +52,36 @@ namespace Proyect_two
             return usuario;
         }
 
+        public async Task<ListaEnlazadaSimple> ObtenerTecnicos()
+        {
+            ListaEnlazadaSimple tecnicos = new ListaEnlazadaSimple();
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                string query = "SELECT * FROM Usuarios WHERE Puesto = 'Tecnico'";
+                SqlCommand command = new SqlCommand(query, connection);
 
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    Usuario_classee tecnico = new Usuario_classee
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                        Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                        Usuario = reader.GetString(reader.GetOrdinal("Usuario")),
+                        Email = reader.GetString(reader.GetOrdinal("Email")),
+                        Puesto = reader.GetString(reader.GetOrdinal("Puesto")),
+                        DPI = reader.GetString(reader.GetOrdinal("DPI")),
+                        NumeroOficina = reader.GetInt32(reader.GetOrdinal("NumeroOficina"))
+                    };
+                    tecnicos.AgregarAlFinal(tecnico);
+                }
+                reader.Close();
+            }
+            return tecnicos;
+        }
         public async Task<bool> ValidarCredencialesCliente(string usuario, string contraseña)
         {
             bool credencialesValidas = false;
