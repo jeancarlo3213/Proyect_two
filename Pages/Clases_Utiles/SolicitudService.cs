@@ -1,4 +1,5 @@
-﻿using System.Data.SqlClient;
+﻿using Proyect_two.Pages.Menus_clientes;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace Proyect_two.Pages.Clases_Utiles
@@ -33,6 +34,37 @@ namespace Proyect_two.Pages.Clases_Utiles
                     await command.ExecuteNonQueryAsync();
                 }
             }
+        }
+        public async Task<ListaEnlazadaSimple> ObtenerSolicitudesPorEstado(string estado)
+        {
+            ListaEnlazadaSimple solicitudes = new ListaEnlazadaSimple();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string query = "SELECT * FROM Solicitudes WHERE Estado = @Estado";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Estado", estado);
+
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    Solicitud solicitud = new Solicitud
+                    {
+                        IdSolicitud = reader.GetInt32(reader.GetOrdinal("IdSolicitud")),
+                        IdCliente = reader.GetInt32(reader.GetOrdinal("IdCliente")),
+                        IdOpcion = reader.GetInt32(reader.GetOrdinal("IdOpcion")),
+                        DescripcionProblema = reader.GetString(reader.GetOrdinal("DescripcionProblema")),
+                        Estado = reader.GetString(reader.GetOrdinal("Estado")),
+                        IdTecnico = reader.IsDBNull(reader.GetOrdinal("IdTecnico")) ? null : reader.GetInt32(reader.GetOrdinal("IdTecnico")),
+                        Calificacion = reader.GetString(reader.GetOrdinal("Calificacion"))
+                    };
+                    solicitudes.AgregarAlFinal(solicitud);
+                }
+                reader.Close();
+            }
+            return solicitudes;
         }
 
         // Método para actualizar el estado de una solicitud en la base de datos
@@ -156,6 +188,33 @@ namespace Proyect_two.Pages.Clases_Utiles
         }
 
         // Método para obtener todas las opciones disponibles
+        public async Task<ListaEnlazadaSimple> ObtenerTecnicos()
+        {
+            ListaEnlazadaSimple tecnicos = new ListaEnlazadaSimple();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string query = "SELECT * FROM Usuarios WHERE Puesto = 'Tecnico'";
+                SqlCommand command = new SqlCommand(query, connection);
+
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    Usuario_classee tecnico = new Usuario_classee
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                        Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                        Usuario = reader.GetString(reader.GetOrdinal("Usuario")),
+                        Email = reader.GetString(reader.GetOrdinal("Email")),
+                    };
+                    tecnicos.AgregarAlFinal(tecnico);
+                }
+                reader.Close();
+            }
+            return tecnicos;
+        }
         public async Task<ListaEnlazadaSimple> ObtenerOpciones()
         {
             ListaEnlazadaSimple opciones = new ListaEnlazadaSimple();

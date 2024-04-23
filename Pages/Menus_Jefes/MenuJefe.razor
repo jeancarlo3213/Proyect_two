@@ -1,7 +1,8 @@
 ﻿@page "/MenusJefes/MenuJefe/{NombreUsuario}"
-@using Proyect_two.Pages.Menus_Tecnicos
-@inject Proyect_two.UsuarioService usuarioService
-@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider authenticationStateProvider
+@using Proyect_two.Pages.Menus_clientes
+@using Proyect_two.Pages.Clases_Utiles
+@inject UsuarioService usuarioService
+@inject SolicitudService solicitudService
 @inject NavigationManager NavigationManager
 
 <h3>Bienvenido, @NombreCompleto</h3>
@@ -13,13 +14,37 @@
             <p><strong>Nombre:</strong> @Usuario.Nombre</p>
             <p><strong>Apellido:</strong> @Usuario.Apellido</p>
             <p><strong>Email:</strong> @Usuario.Email</p>
-            <!-- Otros detalles del perfil aquí -->
         </div>
         <div class="perfil-buttons">
             <button class="btn-editar-perfil">Editar Perfil</button>
             <button class="btn-cambiar-contraseña">Cambiar Contraseña</button>
-            <!-- Otros botones para acciones relacionadas con el perfil -->
+            <button class="btn-ver-solicitudes" @onclick="CargarSolicitudesEnEspera">Ver Solicitudes en Espera</button>
         </div>
+        @if (SolicitudesEnEspera != null && !SolicitudesEnEspera.ListaVacia())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Solicitud</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (Nodo nodo in SolicitudesEnEspera)
+                    {
+                        Solicitud solicitud = nodo.Informacion as Solicitud;
+                        <tr>
+                            <td>@solicitud.IdSolicitud</td>
+                            <td>@solicitud.DescripcionProblema</td>
+                            <td>@solicitud.Estado</td>
+                            <td><button @onclick="() => AsignarTecnico(solicitud)">Asignar Técnico</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 }
 else
@@ -27,54 +52,26 @@ else
     <p>No se pudo cargar la información del usuario.</p>
 }
 
-<style>
-    .perfil-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 20px;
-    }
-
-    .perfil-info {
-        width: 60%;
-    }
-
-    .perfil-buttons {
-        width: 35%;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .btn-editar-perfil, .btn-cambiar-contraseña {
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-        .btn-editar-perfil:hover, .btn-cambiar-contraseña:hover {
-            background-color: #0056b3;
-        }
-</style>
-
 @code {
-    private Proyect_two.Pages.Menus_clientes.Usuario_classee Usuario;
+    private Usuario_classee Usuario;
+    private ListaEnlazadaSimple SolicitudesEnEspera;
     [Parameter]
     public string NombreUsuario { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Usuario = await ObtenerUsuarioPorNombreUsuario(NombreUsuario);
+        Usuario = await usuarioService.ObtenerUsuarioPorNombreUsuario(NombreUsuario);
+        SolicitudesEnEspera = new ListaEnlazadaSimple(); // Asegura que esté inicializada
     }
 
-    private async Task<Proyect_two.Pages.Menus_clientes.Usuario_classee> ObtenerUsuarioPorNombreUsuario(string nombreUsuario)
+    private async Task CargarSolicitudesEnEspera()
     {
-        // Aquí llamamos al servicio para obtener el usuario por su nombre de usuario
-        return await usuarioService.ObtenerUsuarioPorNombreUsuario(nombreUsuario);
+        SolicitudesEnEspera = await solicitudService.ObtenerSolicitudesPorEstado("En espera");
+    }
+
+    private async Task AsignarTecnico(Solicitud solicitud)
+    {
+        // Implementa la lógica para abrir un modal o redirigir a otra página donde se pueda seleccionar un técnico
     }
 
     private string NombreCompleto => Usuario != null ? $"{Usuario.Nombre} {Usuario.Apellido}" : "Usuario";
