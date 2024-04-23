@@ -51,7 +51,71 @@ namespace Proyect_two
 
             return usuario;
         }
+        public async Task<bool> ValidarDPI(string dpi)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                var query = "SELECT COUNT(*) FROM Usuarios WHERE DPI = @DPI";
+                var command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@DPI", dpi);
 
+                await connection.OpenAsync();
+                int count = (int)await command.ExecuteScalarAsync();
+                return count > 0;
+            }
+        }
+        public async Task<ListaEnlazadaSimple> ObtenerSolicitudesPorTecnico(int idTecnico)
+        {
+            ListaEnlazadaSimple solicitudesAsignadas = new ListaEnlazadaSimple();
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                string query = @"
+                SELECT * FROM Solicitudes 
+                WHERE IdTecnico = @IdTecnico AND Estado = 'Asignado'";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@IdTecnico", idTecnico);
+
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    solicitudesAsignadas.AgregarAlFinal(new Solicitud
+                    {
+                        IdSolicitud = reader.GetInt32(reader.GetOrdinal("IdSolicitud")),
+                        IdCliente = reader.GetInt32(reader.GetOrdinal("IdCliente")),
+                        IdOpcion = reader.GetInt32(reader.GetOrdinal("IdOpcion")),
+                        DescripcionProblema = reader.GetString(reader.GetOrdinal("DescripcionProblema")),
+                        Estado = reader.GetString(reader.GetOrdinal("Estado")),
+                        IdTecnico = idTecnico,
+                        Calificacion = reader.GetString(reader.GetOrdinal("Calificacion"))
+                    });
+                }
+                reader.Close();
+            }
+            return solicitudesAsignadas;
+        }
+        public async Task AgregarUsuario(Usuario_classee user)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                var query = @"
+                    INSERT INTO Usuarios (Nombre, Apellido, Usuario, Contraseña, Email, Puesto, DPI, NumeroOficina)
+                    VALUES (@Nombre, @Apellido, @Usuario, @Contraseña, @Email, @Puesto, @DPI, @NumeroOficina)";
+                var command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Nombre", user.Nombre);
+                command.Parameters.AddWithValue("@Apellido", user.Apellido);
+                command.Parameters.AddWithValue("@Usuario", user.Usuario);
+                command.Parameters.AddWithValue("@Contraseña", user.Contraseña);
+                command.Parameters.AddWithValue("@Email", user.Email);
+                command.Parameters.AddWithValue("@Puesto", user.Puesto);
+                command.Parameters.AddWithValue("@DPI", user.DPI);
+                command.Parameters.AddWithValue("@NumeroOficina", user.NumeroOficina);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+        }
         public async Task<ListaEnlazadaSimple> ObtenerTecnicos()
         {
             ListaEnlazadaSimple tecnicos = new ListaEnlazadaSimple();
@@ -120,6 +184,100 @@ namespace Proyect_two
             return credencialesValidas;
         }
 
+        public async Task<ListaEnlazadaSimple> SearchUsersById(string id)
+        {
+            ListaEnlazadaSimple results = new ListaEnlazadaSimple();
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                string query = "SELECT * FROM Usuarios WHERE Id = @Id";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Id", id);
+
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    results.AgregarAlFinal(new Usuario_classee
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                        Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                        Usuario = reader.GetString(reader.GetOrdinal("Usuario")),
+                        Email = reader.GetString(reader.GetOrdinal("Email")),
+                        Puesto = reader.GetString(reader.GetOrdinal("Puesto")),
+                        DPI = reader.GetString(reader.GetOrdinal("DPI")),
+                        NumeroOficina = reader.GetInt32(reader.GetOrdinal("NumeroOficina"))
+                    });
+                }
+                reader.Close();
+            }
+            return results;
+        }
+
+        // Método para buscar usuarios por DPI
+        public async Task<ListaEnlazadaSimple> SearchUsersByDPI(string dpi)
+        {
+            ListaEnlazadaSimple results = new ListaEnlazadaSimple();
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                string query = "SELECT * FROM Usuarios WHERE DPI = @DPI";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@DPI", dpi);
+
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    results.AgregarAlFinal(new Usuario_classee
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                        Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                        Usuario = reader.GetString(reader.GetOrdinal("Usuario")),
+                        Email = reader.GetString(reader.GetOrdinal("Email")),
+                        Puesto = reader.GetString(reader.GetOrdinal("Puesto")),
+                        DPI = reader.GetString(reader.GetOrdinal("DPI")),
+                        NumeroOficina = reader.GetInt32(reader.GetOrdinal("NumeroOficina"))
+                    });
+                }
+                reader.Close();
+            }
+            return results;
+        }
+
+        // Método para buscar usuarios por puesto
+        public async Task<ListaEnlazadaSimple> SearchUsersByPuesto(string puesto)
+        {
+            ListaEnlazadaSimple results = new ListaEnlazadaSimple();
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                string query = "SELECT * FROM Usuarios WHERE Puesto = @Puesto";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Puesto", puesto);
+
+                await connection.OpenAsync();
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    results.AgregarAlFinal(new Usuario_classee
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                        Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                        Usuario = reader.GetString(reader.GetOrdinal("Usuario")),
+                        Email = reader.GetString(reader.GetOrdinal("Email")),
+                        Puesto = reader.GetString(reader.GetOrdinal("Puesto")),
+                        DPI = reader.GetString(reader.GetOrdinal("DPI")),
+                        NumeroOficina = reader.GetInt32(reader.GetOrdinal("NumeroOficina"))
+                    });
+                }
+                reader.Close();
+            }
+            return results;
+        }
         public async Task<bool> ValidarCredencialesJefe(string usuario, string contraseña)
         {
             bool credencialesValidas = false;

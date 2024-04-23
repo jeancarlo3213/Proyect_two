@@ -35,6 +35,7 @@ namespace Proyect_two.Pages.Clases_Utiles
                 }
             }
         }
+
         public async Task<ListaEnlazadaSimple> ObtenerSolicitudesPorEstado(string estado)
         {
             ListaEnlazadaSimple solicitudes = new ListaEnlazadaSimple();
@@ -263,6 +264,7 @@ namespace Proyect_two.Pages.Clases_Utiles
 
             return opciones;
         }
+
     }
 }
 

@@ -1,0 +1,84 @@
+﻿@using Proyect_two.Pages.Clases_Utiles
+@using Proyect_two.Pages.Menus_clientes
+@using System.Threading.Tasks
+@inject UsuarioService usuarioService
+
+<Modal IsOpen="@IsOpen" OnClose="CloseModal">
+    <ModalHeader>
+        <h5 class="modal-title">Agregar nuevo usuario</h5>
+    </ModalHeader>
+    <ModalBody>
+        <EditForm Model="@newUser" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <InputText id="nombre" class="form-control" @bind-Value="newUser.Nombre" />
+            </div>
+            <div class="form-group">
+                <label for="apellido">Apellido:</label>
+                <InputText id="apellido" class="form-control" @bind-Value="newUser.Apellido" />
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <InputText id="email" class="form-control" @bind-Value="newUser.Email" />
+            </div>
+            <div class="form-group">
+                <label for="usuario">Usuario:</label>
+                <InputText id="usuario" class="form-control" @bind-Value="newUser.Usuario" />
+            </div>
+            <div class="form-group">
+                <label for="contraseña">Contraseña:</label>
+                <InputText id="contraseña" class="form-control" type="password" @bind-Value="newUser.Contraseña" />
+            </div>
+            <div class="form-group">
+                <label for="dpi">DPI:</label>
+                <InputText id="dpi" class="form-control" @bind-Value="newUser.DPI" />
+            </div>
+            <div class="form-group">
+                <label for="puesto">Puesto:</label>
+                <InputSelect id="puesto" class="form-control" @bind-Value="newUser.Puesto">
+                    <option value="">Seleccionar Puesto</option>
+                    <option value="Tecnico">Técnico</option>
+                    <option value="Cliente">Cliente</option>
+                </InputSelect>
+            </div>
+            <button type="submit" class="btn btn-success">Agregar Usuario</button>
+            @if (!string.IsNullOrEmpty(message))
+            {
+                <div class="alert alert-success mt-2">@message</div>
+            }
+        </EditForm>
+    </ModalBody>
+</Modal>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    Usuario_classee newUser = new Usuario_classee();
+    string message = "";
+
+    private void CloseModal()
+    {
+        OnClose.InvokeAsync(false);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var dpiExists = await usuarioService.ValidarDPI(newUser.DPI);
+        if (dpiExists)
+        {
+            message = "Error: DPI ya registrado.";
+        }
+        else
+        {
+            await usuarioService.AgregarUsuario(newUser);
+            newUser = new Usuario_classee();  // Reset the form fields
+            message = "Usuario Agregado Exitosamente";
+            // Optionally close the modal here if needed
+            // CloseModal();
+        }
+    }
+}

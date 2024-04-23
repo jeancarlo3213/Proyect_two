@@ -1,0 +1,95 @@
+﻿@inject UsuarioService usuarioService
+@using Proyect_two.Pages.Clases_Utiles
+@using Proyect_two.Pages.Menus_clientes
+@using System.Threading.Tasks
+
+<Modal IsOpen="@IsOpen" OnClose="HandleClose">
+    <ModalHeader>
+        <h5 class="modal-title">Buscar Usuarios</h5>
+    </ModalHeader>
+    <ModalBody>
+        <div>
+            <InputText @bind-Value="searchId" placeholder="Buscar por ID" />
+            <button class="btn btn-primary" @onclick="() => SearchById()">Buscar</button>
+        </div>
+        <div>
+            <InputText @bind-Value="searchDPI" placeholder="Buscar por DPI" />
+            <button class="btn btn-primary" @onclick="() => SearchByDPI()">Buscar</button>
+        </div>
+        <div>
+            <InputSelect @bind-Value="searchPuesto">
+                <option value="">Seleccione el puesto</option>
+                <option value="Tecnico">Técnico</option>
+                <option value="Cliente">Cliente</option>
+            </InputSelect>
+            <button class="btn btn-primary" @onclick="() => SearchByPuesto()">Buscar</button>
+        </div>
+
+        @if (searchResults != null && !searchResults.ListaVacia())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Email</th>
+                        <th>DPI</th>
+                        <th>Puesto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (Nodo nodo in searchResults)
+                    {
+                        Usuario_classee user = nodo.Informacion as Usuario_classee;
+                        <tr>
+                            <td>@user.Id</td>
+                            <td>@user.Nombre</td>
+                            <td>@user.Apellido</td>
+                            <td>@user.Email</td>
+                            <td>@user.DPI</td>
+                            <td>@user.Puesto</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No se encontraron resultados.</p>
+        }
+    </ModalBody>
+</Modal>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    private string searchId;
+    private string searchDPI;
+    private string searchPuesto;
+    private ListaEnlazadaSimple searchResults;
+
+    private async Task SearchById()
+    {
+        searchResults = await usuarioService.SearchUsersById(searchId);
+        StateHasChanged();
+    }
+
+    private async Task SearchByDPI()
+    {
+        searchResults = await usuarioService.SearchUsersByDPI(searchDPI);
+        StateHasChanged();
+    }
+
+    private async Task SearchByPuesto()
+    {
+        searchResults = await usuarioService.SearchUsersByPuesto(searchPuesto);
+        StateHasChanged();
+    }
+
+    private void HandleClose()
+    {
+        OnClose.InvokeAsync(false);
+    }
+}
